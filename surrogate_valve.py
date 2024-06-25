@@ -1,7 +1,10 @@
 # Methods and helper functions to train and use a surrogate valve.
 import pyomo.environ as pyo
-from idaes.core import FlowsheetBlock, MaterialBalanceType
+from idaes.core import FlowsheetBlock, MaterialBalanceType, ControlVolume0DBlock, declare_process_block_class, EnergyBalanceType, MomentumBalanceType, MaterialBalanceType, useDefault, UnitModelBlockData
 from idaes.models.unit_models import Valve
+from pyomo.common.config import ConfigBlock, ConfigValue, In
+from idaes.core.surrogate.surrogate_block import SurrogateBlock
+from idaes.core.util.config import is_physical_parameter_block
 from idaes.models.properties import iapws95
 from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.core.surrogate.pysmo.sampling import HammersleySampling
@@ -136,6 +139,71 @@ def train_valve_model():
 # either using an idaes custom unitBlock api: https://idaes-pse.readthedocs.io/en/stable/how_to_guides/custom_models/unit_model_development.html
 # or just by creating a custom block manually
 # see: surrogate_modelling.ipynb for an example of how to use the surrogate model
+
+# I am going to use an idaes custom unitBlock api, following the example in 
+# https://idaes.github.io/examples-pse/latest/Examples/Advanced/CustomUnitModels/custom_compressor_doc.html
+
+
+
+# Utility function to make a control volume block for the valve for material and energy balances
+# (remember the valve is isenthalpic and doesn't have a holdup)
+
+
+
+def make_control_volume(unit, name, config):
+    if config.dynamic is not False:
+        raise ValueError('SurrogateValve does not support dynamics')
+    if config.has_holdup is not False:
+        raise ValueError('SurrogateValve does not support holdup')
+
+    control_volume = ControlVolume0DBlock(property_package=config.property_package,
+                                          property_package_args=config.property_package_args)
+
+    # Add the control volume block to the unit
+    setattr(unit, name, control_volume)
+
+    control_volume.add_state_blocks(has_phase_equilibrium=config.has_phase_equilibrium)
+    control_volume.add_material_balances(balance_type=config.material_balance_type,
+                                         has_phase_equilibrium=config.has_phase_equilibrium)
+    control_volume.add_total_enthalpy_balances(has_heat_of_reaction=False, 
+                                               has_heat_transfer=False, 
+                                               has_work_transfer=True)
+
+
+
+@declare_process_block_class("SurrogateValve")
+class SurrogateValveData(UnitModelBlockData):
+    CONFIG = UnitModelBlockData.CONFIG()
+    # Declare all the standard config arguments for the control_volume
+    CONFIG.declare("material_balance_type", ConfigValue(default=MaterialBalanceType.componentPhase, domain=In(MaterialBalanceType)))
+    CONFIG.declare("energy_balance_type", ConfigValue(default=EnergyBalanceType.enthalpyTotal, domain=In([EnergyBalanceType.enthalpyTotal])))
+    CONFIG.declare("momentum_balance_type", ConfigValue(default=MomentumBalanceType.none, domain=In([MomentumBalanceType.none])))
+    CONFIG.declare("has_phase_equilibrium", ConfigValue(default=False, domain=In([False])))
+    CONFIG.declare("has_pressure_change", ConfigValue(default=False, domain=In([False])))
+    CONFIG.declare("property_package", ConfigValue(default=useDefault, domain=is_physical_parameter_block))
+    CONFIG.declare("property_package_args", ConfigBlock(implicit=True))
+    # no other args need to be declared, we are just hardcoding the valve model.
+
+    def build(self):
+        super(SurrogateValveData, self).build()
+        
+        # This function handles adding the control volume block to the unit,
+        # and addiing the necessary material and energy balances.
+        make_control_volume(self, "control_volume", self.config)
+
+        self.add_inlet_port()
+        self.add_outlet_port()
+        self.valve_opening = pyo.Var(initialize=1.0, bounds=(0.0, 1.0))
+
+        # Load Surrogate model to predict pressure
+        model = PysmoSurrogate.load_from_file('pysmo_valve_surrogate.json')
+        inputs = [self.inlet.pressure, self.inlet.enthalpy, self.valve_opening, self.inlet.flow ]
+        outputs = [self.outlet.pressure]
+        self.surrogate = SurrogateBlock(concrete=True)
+        self.surrogate.build_model(model,input_vars=inputs, output_vars=outputs)
+        
+
+    
 
 if __name__ == "__main__":
     train_valve_model()
