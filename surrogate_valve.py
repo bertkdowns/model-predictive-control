@@ -189,7 +189,7 @@ class SurrogateValveData(UnitModelBlockData):
         
         # This function handles adding the control volume block to the unit,
         # and addiing the necessary material and energy balances.
-        make_control_volume(self, "control_volume", self.config)
+        make_control_volume(self, "control_volume", self.CONFIG)
 
         self.add_inlet_port()
         self.add_outlet_port()
