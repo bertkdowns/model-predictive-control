@@ -156,7 +156,10 @@ def make_control_volume(unit, name, config):
     if config.has_holdup is not False:
         raise ValueError('SurrogateValve does not support holdup')
 
-    control_volume = ControlVolume0DBlock(property_package=config.property_package,
+    control_volume = ControlVolume0DBlock(
+                                          dynamic=config.dynamic,
+                                          has_holdup=config.has_holdup,
+                                          property_package=config.property_package,
                                           property_package_args=config.property_package_args)
 
     # Add the control volume block to the unit
