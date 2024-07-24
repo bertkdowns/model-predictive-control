@@ -21,7 +21,7 @@ configuration = {
             "entr_mol_ig_comp": ChemSep,
             "pressure_sat_comp": ChemSep,
             "dens_mol_liq_comp": Perrys,
-            "phase_equilibrium_form": {("Vap", "Liq"): log_fugacity},
+            "phase_equilibrium_form": {},
             "parameter_data": {
                 "mw": (78.11184, pyunits.kg / pyunits.kmol),
                 "pressure_crit": (4895000, pyunits.Pa),
@@ -56,7 +56,7 @@ configuration = {
             "entr_mol_ig_comp": RPP4,
             "pressure_sat_comp": ChemSep,
             "dens_mol_liq_comp": Perrys,
-            "phase_equilibrium_form": {("Vap", "Liq"): log_fugacity},
+            "phase_equilibrium_form": {},
             "parameter_data": {
                 "mw": (92.13843, pyunits.kg / pyunits.kmol),
                 "pressure_crit": (4108000, pyunits.Pa),
@@ -91,11 +91,6 @@ configuration = {
             "equation_of_state": Cubic,
             "equation_of_state_options": {"type": CubicType.PR},
         },
-        "Vap": {
-            "type": VaporPhase,
-            "equation_of_state": Cubic,
-            "equation_of_state_options": {"type": CubicType.PR},
-        },
     },
     "base_units": {
         "time": pyunits.s,
@@ -112,8 +107,8 @@ configuration = {
     },
     "pressure_ref": (101325, pyunits.Pa),
     "temperature_ref": (298.15, pyunits.K),
-    "phases_in_equilibrium": [("Vap", "Liq")],
-    "phase_equilibrium_state": {("Vap", "Liq"): SmoothVLE},
+    "phases_in_equilibrium": [],
+    "phase_equilibrium_state": {},
     "bubble_dew_method": LogBubbleDew,
     "parameter_data": {
         "PR_kappa": {
