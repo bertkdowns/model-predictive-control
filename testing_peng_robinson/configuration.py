@@ -15,73 +15,30 @@ from pyomo.environ import units as pyunits
 
 configuration = {
     "components": {
-        "benzene": {
+        "water": {
             "type": Component,
             "enth_mol_ig_comp": ChemSep,
             "entr_mol_ig_comp": ChemSep,
             "pressure_sat_comp": ChemSep,
-            "dens_mol_liq_comp": Perrys,
-            "phase_equilibrium_form": {},
             "parameter_data": {
-                "mw": (78.11184, pyunits.kg / pyunits.kmol),
-                "pressure_crit": (4895000, pyunits.Pa),
-                "temperature_crit": (562.05, pyunits.K),
-                "omega": 0.209,
+                "mw": (18.01528, pyunits.kg / pyunits.kmol),
+                "pressure_crit": (22064000, pyunits.Pa),
+                "temperature_crit": (647.14, pyunits.K),
+                "omega": 0.344,
                 "cp_mol_ig_comp_coeff": {
-                    "A": (29525, pyunits.J / pyunits.kmol / pyunits.K),
-                    "B": (-51.417, pyunits.J / pyunits.kmol / pyunits.K**2),
-                    "C": (1.1944, pyunits.J / pyunits.kmol / pyunits.K**3),
-                    "D": (-0.0016468, pyunits.J / pyunits.kmol / pyunits.K**4),
-                    "E": (6.8461E-07, pyunits.J / pyunits.kmol / pyunits.K**5),
+                    "A": (33444.62, pyunits.J / pyunits.kmol / pyunits.K),
+                    "B": (-5.799206, pyunits.J / pyunits.kmol / pyunits.K**2),
+                    "C": (0.0251681, pyunits.J / pyunits.kmol / pyunits.K**3),
+                    "D": (-0.0000143103, pyunits.J / pyunits.kmol / pyunits.K**4),
+                    "E": (2.76249E-09, pyunits.J / pyunits.kmol / pyunits.K**5),
                 },
-                "enth_mol_form_vap_comp_ref": (8.288E+07, pyunits.J / pyunits.kmol),
-                "entr_mol_form_vap_comp_ref": (-269300, pyunits.J / pyunits.kmol / pyunits.K),
+                "enth_mol_form_vap_comp_ref": (-241814000, pyunits.J / pyunits.kmol),
+                "entr_mol_form_vap_comp_ref": (-188724, pyunits.J / pyunits.kmol / pyunits.K),
                 "pressure_sat_comp_coeff": {
-                    "A": (21.075, None),
-                    "B": (2977.3, pyunits.K),
-                    "C": (-41.505, pyunits.K)
+                    "A": (23.401, None),
+                    "B": (3987.3, pyunits.K),
+                    "C": (-37.161, pyunits.K)
                 },
-                "dens_mol_liq_comp_coeff": {
-                    "eqn_type": 1,
-                    "1": (0.99938, pyunits.kmol / pyunits.m**3),
-                    "2": (0.26348, None),
-                    "3": (562.05, pyunits.K),
-                    "4": (0.27856, None),
-                }
-            },
-        },
-        "toluene": {
-            "type": Component,
-            "enth_mol_ig_comp": RPP4,
-            "entr_mol_ig_comp": RPP4,
-            "pressure_sat_comp": ChemSep,
-            "dens_mol_liq_comp": Perrys,
-            "phase_equilibrium_form": {},
-            "parameter_data": {
-                "mw": (92.13843, pyunits.kg / pyunits.kmol),
-                "pressure_crit": (4108000, pyunits.Pa),
-                "temperature_crit": (591.75, pyunits.K),
-                "omega": 0.264,
-                "cp_mol_ig_comp_coeff": {
-                    "A": (-43647.49, pyunits.J / pyunits.kmol / pyunits.K),
-                    "B": (603.542, pyunits.J / pyunits.kmol / pyunits.K**2),
-                    "C": (-0.399451, pyunits.J / pyunits.kmol / pyunits.K**3),
-                    "D": (0.000104382, pyunits.J / pyunits.kmol / pyunits.K**4),
-                },
-                "enth_mol_form_vap_comp_ref": (5.017E+07, pyunits.J / pyunits.kmol),
-                "entr_mol_form_vap_comp_ref": (-320990, pyunits.J / pyunits.kmol / pyunits.K),
-                "pressure_sat_comp_coeff": {
-                    "A": (20.864, None),
-                    "B": (3019.2, pyunits.K),
-                    "C": (-60.13, pyunits.K)
-                },
-                "dens_mol_liq_comp_coeff": {
-                    "eqn_type": 1,
-                    "1": (0.89799, pyunits.kmol / pyunits.m**3),
-                    "2": (0.27359, None),
-                    "3": (591.75, pyunits.K),
-                    "4": (0.30006, None)
-                }
             },
         },
     },
@@ -99,7 +56,7 @@ configuration = {
         "amount": pyunits.mol,
         "temperature": pyunits.K,
     },
-    "state_definition": FPhx,
+    "state_definition": FTPx,
     "state_bounds": {
         "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
         "temperature": (273.15, 300, 500, pyunits.K),
@@ -112,10 +69,7 @@ configuration = {
     "bubble_dew_method": LogBubbleDew,
     "parameter_data": {
         "PR_kappa": {
-            ("benzene", "benzene"): 0.000,
-            ("benzene", "toluene"): 0.000,
-            ("toluene", "benzene"): 0.000,
-            ("toluene", "toluene"): 0.000,
+            ("water", "water"): 0.000,
         }
     },
 }
