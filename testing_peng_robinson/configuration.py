@@ -19,7 +19,7 @@ configuration = {
             "type": Component,
             "enth_mol_ig_comp": ChemSep,
             "entr_mol_ig_comp": ChemSep,
-            "pressure_sat_comp": ChemSep,
+            "pressure_sat_comp": RPP4,
             "parameter_data": {
                 "mw": (18.01528, pyunits.kg / pyunits.kmol),
                 "pressure_crit": (22064000, pyunits.Pa),
@@ -36,15 +36,16 @@ configuration = {
                 "entr_mol_form_vap_comp_ref": (-188724, pyunits.J / pyunits.kmol / pyunits.K),
                 "pressure_sat_comp_coeff": {
                     "A": (23.401, None),
-                    "B": (3987.3, pyunits.K),
-                    "C": (-37.161, pyunits.K)
+                    "B": (3987.3, None),
+                    "C": (-37.161, None),
+                    "D": (-37.161, None)
                 },
             },
         },
     },
     "phases": {
         "Liq": {
-            "type": LiquidPhase,
+            "type": VaporPhase,
             "equation_of_state": Cubic,
             "equation_of_state_options": {"type": CubicType.PR},
         },
@@ -56,7 +57,7 @@ configuration = {
         "amount": pyunits.mol,
         "temperature": pyunits.K,
     },
-    "state_definition": FTPx,
+    "state_definition": FPhx,
     "state_bounds": {
         "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
         "temperature": (273.15, 300, 500, pyunits.K),
