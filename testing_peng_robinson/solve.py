@@ -16,7 +16,7 @@ m.fs.heater = Heater(property_package=m.fs.props)
 # Set inlet conditions for the stream
 m.fs.heater.inlet.flow_mol.fix(10)  # mol/s
 #m.fs.heater.inlet.temperature.fix(283)  # K
-m.fs.heater.inlet.enth_mol.fix(2900)  # J/mol
+m.fs.heater.inlet.enth_mol.fix(747.4)  # J/mol
 m.fs.heater.inlet.pressure.fix(100000)  # Pa
 #m.fs.heater.inlet.mole_frac_comp[0, "benzene"].fix(0.5)
 #m.fs.heater.inlet.mole_frac_comp[0, "toluene"].fix(0.5)
@@ -24,7 +24,7 @@ m.fs.heater.inlet.mole_frac_comp[0, "water"].fix(1)
  
 # Set the outlet temperature
 #m.fs.heater.outlet.temperature[0].fix(284)  # K
-m.fs.heater.outlet.enth_mol[0].fix(2910)  # J/mol
+m.fs.heater.outlet.enth_mol[0].fix(747.4)  # J/mol
 #m.fs.heater.outlet.enthalpy[0].fix(1000)
  
 # Define the energy balance (heater duty)

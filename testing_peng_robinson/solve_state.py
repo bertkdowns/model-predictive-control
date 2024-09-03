@@ -15,8 +15,9 @@ m.fs.state = m.fs.props.build_state_block([0],defined_state=True)
  
 # Set inlet conditions for the stream
 m.fs.state[0].flow_mol.fix(10)  # mol/s
-m.fs.state[0].enth_mol.fix(2900)  # J/mol
-#m.fs.state[0].temperature.fix(30)
+m.fs.state[0].enth_mol.fix(-241800)  # J/mol
+#m.fs.state[0].enth_mol.unfix()
+#m.fs.state[0].temperature.fix(300)
 m.fs.state[0].pressure.fix(100000)  # Pa
 m.fs.state[0].mole_frac_comp["water"].fix(1)
  
@@ -29,7 +30,7 @@ results = solver.solve(m, tee=True)
  
 # Display results
 print("\n*** Results ***")
-print("Inlet enth_mol (K):", value(m.fs.state[0].enth_mol))
+print("Inlet enth_mol (J/mol):", value(m.fs.state[0].enth_mol))
 print("Inlet Temperature (K):", value(m.fs.state[0].temperature))
 
 dof = degrees_of_freedom(m)
