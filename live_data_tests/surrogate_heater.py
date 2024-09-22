@@ -45,13 +45,13 @@ def train_heater_model():
 
     # min and max bounds for [inlet_pressure, inlet_temperature, heat_duty, inlet_flow]
     sample_range = [
-        [10132,500,0,50],
-        [201325,800,250_000,500]
+        [100000,500,0,50],
+        [102325,800,250_000,300]
     ]
     # we need to be careful with the sampling, because e.g high heat duty is fine with high flow rate
     # but not with low flow rate
     sample_points = HammersleySampling(data_input=sample_range, 
-                                        number_of_samples=300,
+                                        number_of_samples=100,
                                         sampling_type='creation').sample_points()
 
     # All should be gas phase
