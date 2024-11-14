@@ -1,0 +1,96 @@
+### Imports
+from pyomo.environ import ConcreteModel, SolverFactory, SolverStatus, TerminationCondition, Block, TransformationFactory
+from pyomo.network import SequentialDecomposition, Port, Arc
+from pyomo.core.base.units_container import _PyomoUnit, units as pyomo_units
+from idaes.core import FlowsheetBlock
+from idaes.core.util.model_statistics import report_statistics, degrees_of_freedom
+import idaes.logger as idaeslog
+from property_packages.build_package import build_package
+from idaes.models.unit_models.pressure_changer import Compressor
+from idaes.models.properties.general_helmholtz import HelmholtzParameterBlock, PhaseType, StateVars, AmountBasis
+from pyomo.environ import Var, Objective, value, Constraint, Expression
+ 
+# rather than doing the iterative solving, this tries to construct a pyomo model that solves
+# the same problem as the iterative solving, but in a single solve, using pyomo's built-in
+# capabilities. Doesn't work yet
+
+
+### Utility Methods
+def units(item: str) -> _PyomoUnit:
+    ureg = pyomo_units._pint_registry
+    pint_unit = getattr(ureg, item)
+    return _PyomoUnit(pint_unit, ureg)
+ 
+ 
+### Build Model
+m = ConcreteModel()
+m.fs = FlowsheetBlock(dynamic=False)
+ 
+# Set up property packages
+m.fs.properties = HelmholtzParameterBlock(
+    pure_component="h2o",
+    phase_presentation=PhaseType.MIX,
+    amount_basis=AmountBasis.MOLE,
+    state_vars=StateVars.PH,
+)
+pressure = 101325
+temperature = 383.15 * units("K")
+
+m.fs.sb1 = m.fs.properties.build_state_block([0], defined_state=True)
+m.fs.sb2 = m.fs.properties.build_state_block([0], defined_state=True)
+
+m.fs.bias = Var(initialize=0)
+m.fs.error = Var()
+
+m.fs.p1 = Constraint(expr=m.fs.sb1[0].pressure == pressure + (m.fs.sb1[0].enth_mol - m.fs.bias - 0.01)*-0.01)
+m.fs.p2 = Constraint(expr=m.fs.sb2[0].pressure == pressure + (m.fs.sb2[0].enth_mol - m.fs.bias) * -0.01)
+m.fs.flow_constraint = Constraint(expr=m.fs.sb1[0].flow_mol == m.fs.sb2[0].flow_mol)
+#m.fs.temperature_constraint = Constraint(expr=m.fs.sb1[0].temperature == m.fs.sb2[0].temperature + m.fs.error)
+m.fs.enthalpy_constraint = Constraint(expr=m.fs.sb1[0].enth_mol == m.fs.sb2[0].enth_mol )
+#m.fs.temperature_constraint = Constraint(expr=m.fs.sb1[0].temperature == m.fs.sb2[0].temperature)
+m.fs.error = Expression(expr= m.fs.sb1[0].enth_mol - m.fs.bias)
+
+# Set flow, pressure, temperature
+m.fs.sb1[0].flow_mol.fix(1 * units("mol/s"))
+m.fs.temperature = Constraint(expr=m.fs.sb1[0].temperature == temperature)
+
+# objective to minimize error
+m.fs.objective = Objective(expr=m.fs.error**2)
+
+# m.fs.sb1[0].enth_mol.fix(40000 * units("J/mol"))
+# add vapor fraction constraint
+# m.fs.constraint1 = Constraint(expr=m.fs.sb1[0].vapor_frac == 0.5)
+# add temperature constraint
+# m.fs.constraint2 = Constraint(expr=m.fs.sb1[0].temperature == 373.15)  # K
+ 
+# flow_mol, pressure, enth_mol: working
+# flow_mol, pressure, vapor_frac: appears to be working, is enthalpy valid?
+# flow_mol, temperature, vapor_frac: not working
+
+m.fs.sb1[0].enth_mol.fix(30000)
+m.fs.sb2[0].enth_mol.fix(60000)
+
+m.fs.sb1[0].enth_mol.unfix()
+m.fs.sb2[0].enth_mol.unfix()
+ 
+print("degrees of freedom", degrees_of_freedom(m))
+ 
+### Solve
+solver = SolverFactory("ipopt")
+result = solver.solve(m, tee=True)
+
+### Report
+print("flow_mol:", value(m.fs.sb1[0].flow_mol))
+print("pressure:", value(m.fs.sb1[0].pressure))
+print("enth_mol:", value(m.fs.sb1[0].enth_mol))
+print("enth_mol:", value(m.fs.sb2[0].enth_mol))
+print("temperature:", value(m.fs.sb1[0].temperature))
+print("temperature:", value(m.fs.sb2[0].temperature))
+print("vapor_frac:", value(m.fs.sb1[0].vapor_frac))
+print("error:", value(m.fs.error))
+print("bias:", value(m.fs.bias))
+# check for optimal solution
+if result.solver.status != SolverStatus.ok or result.solver.termination_condition != TerminationCondition.optimal:
+    raise Exception("Solver did not converge to an optimal solution")
+ 
+ 

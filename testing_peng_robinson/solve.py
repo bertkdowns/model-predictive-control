@@ -24,7 +24,7 @@ m.fs.heater.inlet.mole_frac_comp[0, "water"].fix(1)
  
 # Set the outlet temperature
 #m.fs.heater.outlet.temperature[0].fix(284)  # K
-m.fs.heater.outlet.enth_mol[0].fix(747.4)  # J/mol
+m.fs.heater.outlet.enth_mol[0].fix(787.4)  # J/mol
 #m.fs.heater.outlet.enthalpy[0].fix(1000)
  
 # Define the energy balance (heater duty)

@@ -47,12 +47,13 @@ m.fs.heater.control_volume.volume.fix(1)
 
 # Fix the derivative variables to zero at time 0 (steady state assumption)
 m.fs.fix_initial_conditions()
-# or, specify holdup
-#m.fs.heater.control_volume.material_holdup[0, 'Mix', 'h2o'].fix(0.001)
-#m.fs.heater.control_volume.energy_holdup[0, :].fix(0)
-# or, specify accumulation (fix_initial_conditions sets the accumulation to 0)
-#m.fs.heater.control_volume.material_accumulation[:, :].fix(300)
-#m.fs.heater.control_volume.energy_accumulation[:, :].fix(300)
+
+# Specify holdup
+m.fs.heater.control_volume.material_holdup[0, 'Mix', 'h2o'].fix(0.001)
+m.fs.heater.control_volume.energy_holdup[0, :].fix(0)
+# or, specify accumulation rate (default: initial accumulation is 0)
+m.fs.heater.control_volume.material_accumulation[:, :].fix(300)
+m.fs.heater.control_volume.energy_accumulation[:, :].fix(300)
 
 #print(degrees_of_freedom(m))
 solver = pyo.SolverFactory("ipopt")

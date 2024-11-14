@@ -57,7 +57,7 @@ configuration = {
         "amount": pyunits.mol,
         "temperature": pyunits.K,
     },
-    "state_definition": FTPx,
+    "state_definition": FPhx,
     "state_bounds": {
         "flow_mol": (0, 100, 1000, pyunits.mol / pyunits.s),
         "temperature": (273.15, 300, 500, pyunits.K),
