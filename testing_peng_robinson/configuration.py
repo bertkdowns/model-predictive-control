@@ -44,8 +44,13 @@ configuration = {
         },
     },
     "phases": {
-        "Liq": {
+        "Vap": {
             "type": VaporPhase,
+            "equation_of_state": Cubic,
+            "equation_of_state_options": {"type": CubicType.PR},
+        },
+        "Liq": {
+            "type": LiquidPhase,
             "equation_of_state": Cubic,
             "equation_of_state_options": {"type": CubicType.PR},
         },

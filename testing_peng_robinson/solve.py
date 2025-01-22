@@ -21,6 +21,7 @@ m.fs.heater.inlet.pressure.fix(100000)  # Pa
 #m.fs.heater.inlet.mole_frac_comp[0, "benzene"].fix(0.5)
 #m.fs.heater.inlet.mole_frac_comp[0, "toluene"].fix(0.5)
 m.fs.heater.inlet.mole_frac_comp[0, "water"].fix(1)
+m.fs.heater.inlet.mole_frac_phase_comp[0, "Liq", "water"].fix(1)
  
 # Set the outlet temperature
 #m.fs.heater.outlet.temperature[0].fix(284)  # K
@@ -35,6 +36,9 @@ m.fs.heater.outlet.enth_mol[0].fix(787.4)  # J/mol
 # Create a solver
 solver = SolverFactory('ipopt')
  
+
+dof = degrees_of_freedom(m)
+print("degrees of freedom: ",dof)
 # Solve the model
 results = solver.solve(m, tee=True)
  
@@ -47,4 +51,3 @@ print("Heater Duty (J/s):", value(m.fs.heater.heat_duty[0]))
 
 dof = degrees_of_freedom(m)
 print("degrees of freedom: ",dof)
- 
