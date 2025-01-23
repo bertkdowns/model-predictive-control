@@ -9,6 +9,7 @@ from pyomo.environ import (
     Suffix,
 )
 from pyomo.environ import units as pyunits
+from pyomo.common.config import ConfigBlock, ConfigValue, Bool
 
 # Import IDAES cores
 from idaes.core import (
@@ -27,7 +28,8 @@ from idaes.core.util.initialization import (
     revert_state_vars,
     solve_indexed_blocks,
 )
-from idaes.core.base.process_base import ProcessBlockData, property_meta
+from idaes.core.base.process_base import ProcessBlockData
+from idaes.core.base import property_meta
 from idaes.core.util.model_statistics import (
     degrees_of_freedom,
     number_unfixed_variables,
@@ -45,14 +47,20 @@ _log = idaeslog.getLogger(__name__)
 
 # When using this file the name "PowerParameterBlock" is what is imported
 @declare_process_block_class("PowerParameterBlock")
-class PropParameterData(ProcessBlockData, property_meta.HasPropertyClassMetadata):
+class PowerParameterData(PhysicalParameterBlock):
     CONFIG = ProcessBlockData.CONFIG()
+    CONFIG.declare(
+            "default_arguments",
+            ConfigBlock(
+                implicit=True, description="Default arguments to use with Property Package"
+            ),
+        )
 
     def build(self):
         """
         Callable method for Block construction.
         """
-        super(PropParameterData, self).build()
+        super(PowerParameterData, self).build()
 
         self._state_block_class = PowerStateBlock
 
@@ -66,11 +74,52 @@ class PropParameterData(ProcessBlockData, property_meta.HasPropertyClassMetadata
     @classmethod
     def define_metadata(cls, obj):
         # see https://github.com/watertap-org/watertap/blob/main/tutorials/creating_a_simple_property_model.ipynb
-        obj.add_default_units(
+        obj.add_properties(
             {
-                "power": pyunits.W,
+                "power": {"method": None},
             }
         )
+        obj.add_default_units(
+            {
+                "time": pyunits.s,
+                "length": pyunits.m,
+                "mass": pyunits.kg,
+            }
+        )
+    
+    def build_state_block(self, *args, **kwargs):
+        """
+        Methods to construct a StateBlock associated with this
+        PhysicalParameterBlock. This will automatically set the parameters
+        construction argument for the StateBlock.
+
+        Returns:
+            StateBlock
+
+        """
+        # default = kwargs.pop("default", {})
+        initialize = kwargs.pop("initialize", {})
+
+        if initialize == {}:
+            kwargs["parameters"] = self
+        else:
+            for i in initialize.keys():
+                initialize[i]["parameters"] = self
+
+        return self.state_block_class(  # pylint: disable=not-callable
+            *args, **kwargs, initialize=initialize
+        )
+
+    @property
+    def state_block_class(self):
+        if self._state_block_class is not None:
+            return self._state_block_class
+        else:
+            raise AttributeError(
+                "{} has not assigned a StateBlock class to be associated "
+                "with this property package. Please contact the developer of "
+                "the property package.".format(self.name)
+            )
 
 # STEP 3: State Block
 class _PowerStateBlock(StateBlock):
@@ -184,7 +233,7 @@ class PowerStateBlockData(StateBlockData):
 
         self.scaling_factor = Suffix(direction=Suffix.EXPORT)
 
-        self.flow_mass_phase_comp = Var(
+        self.power = Var(
             initialize=0,
             domain=Reals,
             units=pyunits.W,
