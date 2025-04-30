@@ -174,12 +174,6 @@ class _PowerStateBlock(StateBlock):
             If hold_states is True, returns a dict containing flags for
             which states were fixed during initialization.
         """
-        # Get loggers
-        init_log = idaeslog.getInitLogger(self.name, outlvl, tag="properties")
-        solve_log = idaeslog.getSolveLogger(self.name, outlvl, tag="properties")
-
-        # Set solver and options
-        opt = get_solver(solver, optarg)
 
         # Fix state variables
         flags = fix_state_vars(self, state_args)
