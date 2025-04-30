@@ -181,40 +181,23 @@ class dsiData(UnitModelBlockData):
         )
         def eq_mass_balance(b, t, c): # this is too simple, we need to also had constraints for mole_frac_phase_comp
             return (
-                sum(b.properties_out[t].get_material_flow_terms(p, c)
-                    for p in b.properties_out[t].phase_list
-                    if (p,c) in b.properties_out[t].phase_component_set) # handle the case where a component is not in that phase (e.g no milk vapor)
-                == sum(b.properties_in[t].get_material_flow_terms(p, c)
-                for p in b.properties_in[t].phase_list 
-                if (p,c) in b.properties_out[t].phase_component_set
-                )
+                0 == sum(b.properties_in[t].get_material_flow_terms(p, c)
+                         + (b.properties_steam_in[t].get_material_flow_terms(p, c)
+                         if c in b.properties_steam_in[t].component_list  # handle the case where a component isn't in the steam inlet (e.g no milk in helmholtz)
+                         else 0)
+                    - b.properties_out[t].get_material_flow_terms(p, c)
+                    for p in b.properties_in[t].phase_list
+                    if (p,c) in b.properties_in[t].phase_component_set) # handle the case where a component is not in that phase (e.g no milk vapor)
+
             )
-        
-        # @self.Constraint(
-        #     self.flowsheet().time,
-        #     self.config.property_package.component_list,
-        #     doc="Mass balance",
-        # )
-        # def eq_mass_balance(b, t, c):
-        #     # block, time, phase, compound
-        #     return (
-        #         sum(b.properties_out[t].get_material_flow_terms(p, c)
-        #             for p in b.properties_out[t].phase_list
-        #             if (p,c) in b.properties_out[t].phase_component_set) # handle the case where a component is not in that phase (e.g no milk vapor)
-        #         == sum(b.properties_in[t].get_material_flow_terms(p, c)
-        #         # note that the steam inlet has less properties, e.g it doesn't have milk.
-        #         + (b.properties_steam_in[t].get_material_flow_terms(p, c)
-        #             if c in b.properties_steam_in[t].component_list  # handle the case where a component isn't in the steam inlet (e.g no milk in helmholtz)
-        #             else 0)
-        #         for p in b.properties_in[t].phase_list 
-        #         if (p,c) in b.properties_out[t].phase_component_set
-        #         )
-        #     )
 
     def calculate_scaling_factors(self):
         super().calculate_scaling_factors()
     
     def initialize(blk, *args, **kwargs):
+        blk.properties_in.initialize()
+        blk.properties_steam_in.initialize()
+        blk.properties_out.initialize()
         pass
 
     def _get_stream_table_contents(self, time_point=0):

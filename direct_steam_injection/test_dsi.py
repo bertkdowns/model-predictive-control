@@ -33,7 +33,7 @@ def test_dsi():
     assert degrees_of_freedom(m.fs.dsi.properties_in) == 0
     assert degrees_of_freedom(m.fs.dsi.properties_steam_in) == 0
     assert degrees_of_freedom(m.fs) == 0
-    
+
     opt = pyo.SolverFactory("ipopt")
     results = opt.solve(m, tee=True)
     m.fs.dsi.display()
