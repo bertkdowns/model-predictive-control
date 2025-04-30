@@ -29,6 +29,7 @@ def test_dsi():
     m.fs.dsi.properties_steam_in[0].constrain_component(m.fs.dsi.properties_steam_in[0].temperature, 400 * pyo.units.K)
     m.fs.dsi.steam_inlet.pressure.fix(101325)
 
+    m.fs.dsi.initialize()
     m.fs.dsi.display()
     assert degrees_of_freedom(m.fs.dsi.properties_in) == 0
     assert degrees_of_freedom(m.fs.dsi.properties_steam_in) == 0
@@ -41,5 +42,4 @@ def test_dsi():
     assert results.solver.termination_condition == pyo.TerminationCondition.optimal
     assert degrees_of_freedom(m.fs) == 0
 
-    assert False
 
