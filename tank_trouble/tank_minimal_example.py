@@ -43,7 +43,8 @@ m.fs.prop_water = iapws95.Iapws95ParameterBlock()
 
 
 m.fs.tank = WaterTank(
-    tank_type="rectangular_tank", has_holdup=True, property_package=m.fs.prop_water
+    tank_type="rectangular_tank", has_holdup=True, property_package=m.fs.prop_water,
+    has_heat_transfer=True, dynamic=True
 )
 
 m.discretizer = pyo.TransformationFactory("dae.finite_difference")
@@ -57,17 +58,13 @@ m.fs.tank.inlet.enth_mol.fix(3700.36)
 
 m.fs.tank.tank_width.fix(0.4) #m
 m.fs.tank.tank_length.fix(0.4)
+m.fs.tank.heat_duty.fix(0)  # W
 
+m.fs.tank.tank_level.fix(0.5)
 
-m.fs.tank.set_initial_condition()
+m.fs.tank.control_volume.material_accumulation[0,:,:].fix(0)
+m.fs.tank.control_volume.energy_accumulation[0,:].fix(0)
 
-# set initial tank level
-m.fs.tank.tank_level.unfix()
-m.fs.tank.tank_level[0].fix(0.5)
-
-# set tank outlet flow after that.
-m.fs.tank.outlet.flow_mol[:].fix(1)
-m.fs.tank.outlet.flow_mol[0].unfix()
 
 iscale.calculate_scaling_factors(m)
 
