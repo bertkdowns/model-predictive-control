@@ -34,30 +34,33 @@ from matplotlib import pyplot as plt
 import math
 import CoolProp.CoolProp as CoolProp  
 from property_packages.build_package import build_package
-
+from custom_tank import DynamicTank
 
 m = pyo.ConcreteModel(name="Testing Tank model")
 m.fs = FlowsheetBlock(
-            dynamic=True, time_set=[0,1], time_units=pyo.units.s
+            dynamic=True, time_set=[0,1,2,3,4], time_units=pyo.units.s
         )
 m.fs.prop_water = build_package("helmholtz",["water"],["Liq","Vap"])
 
-
-m.fs.tank = WaterTank(
+m.fs.tank = DynamicTank(
     tank_type="rectangular_tank", has_holdup=True, property_package=m.fs.prop_water,
     has_heat_transfer=True, dynamic=True
 )
 
 m.discretizer = pyo.TransformationFactory("dae.finite_difference")
-m.discretizer.apply_to(m, nfe=1, wrt=m.fs.time, scheme="BACKWARD")
+m.discretizer.apply_to(m, nfe=4, wrt=m.fs.time, scheme="BACKWARD")
 
 
 
 m.fs.tank.inlet.flow_mol.fix(200)
 m.fs.tank.inlet.pressure.fix(100000)
 #m.fs.tank.inlet.enth_mol.fix(3700.36)
-m.fs.tank.control_volume.properties_in[0].constrain("temperature",300)
-m.fs.tank.control_volume.properties_in[1].constrain("temperature",300)
+m.fs.tank.control_volume.properties_in[0].constrain("temperature",350)
+m.fs.tank.control_volume.properties_in[1].constrain("temperature",350)
+m.fs.tank.control_volume.properties_in[2].constrain("temperature",350)
+m.fs.tank.control_volume.properties_in[3].constrain("temperature",350)
+m.fs.tank.control_volume.properties_in[4].constrain("temperature",350)
+
 
 
 
