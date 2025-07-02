@@ -14,6 +14,7 @@ from pyomo.environ import (
 
 import pyomo.environ as pyo
 from pyomo.network import Arc
+from idaes.core.util import DiagnosticsToolbox
 
 from idaes.core import FlowsheetBlock
 from idaes.models_extra.power_generation.unit_models.watertank import WaterTank
@@ -38,7 +39,7 @@ from custom_tank import DynamicTank
 
 m = pyo.ConcreteModel(name="Testing Tank model")
 m.fs = FlowsheetBlock(
-            dynamic=True, time_set=[0,1,2,3,4], time_units=pyo.units.s
+            dynamic=True, time_set=[0,1,2], time_units=pyo.units.s
         )
 m.fs.prop_water = build_package("helmholtz",["water"],["Liq","Vap"])
 
@@ -48,7 +49,7 @@ m.fs.tank = DynamicTank(
 )
 
 m.discretizer = pyo.TransformationFactory("dae.finite_difference")
-m.discretizer.apply_to(m, nfe=4, wrt=m.fs.time, scheme="BACKWARD")
+m.discretizer.apply_to(m, nfe=2, wrt=m.fs.time, scheme="BACKWARD")
 
 
 
@@ -58,8 +59,6 @@ m.fs.tank.inlet.pressure.fix(100000)
 m.fs.tank.control_volume.properties_in[0].constrain("temperature",350)
 m.fs.tank.control_volume.properties_in[1].constrain("temperature",350)
 m.fs.tank.control_volume.properties_in[2].constrain("temperature",350)
-m.fs.tank.control_volume.properties_in[3].constrain("temperature",350)
-m.fs.tank.control_volume.properties_in[4].constrain("temperature",350)
 
 
 
@@ -92,15 +91,28 @@ def initial_energy_accumulation_vap(b):
 iscale.calculate_scaling_factors(m)
 
 print('DoF:', degrees_of_freedom(m.fs))  
-assert degrees_of_freedom(m.fs) == 0, "Degrees of freedom is not zero, check model setup."
+#assert degrees_of_freedom(m.fs) == 0, "Degrees of freedom is not zero, check model setup."
 
-#m.fs.tank.initialize()
+m.fs.tank.initialize()
+
+
 
 assert degrees_of_freedom(m.fs) == 0, "Degrees of freedom is not zero, check model setup."
 
 #m.fs.visualize("My Flowsheet", loop_forever = True)
 
-solver = get_solver()
+
+dt = DiagnosticsToolbox(m)
+dt.report_structural_issues()
+
+
+
+dt.display_overconstrained_set()
+dt.display_underconstrained_set()
+dt.display_potential_evaluation_errors()
+
+
+# solver = get_solver()
 
 solver.solve(m, tee=True)
 
@@ -108,4 +120,4 @@ for t in m.fs.time:
     print (m.fs.tank.report(t))
     print(value(m.fs.tank.tank_level[t]))
 
-#m.fs.visualize("My Flowsheet", loop_forever = True)
+# #m.fs.visualize("My Flowsheet", loop_forever = True)

@@ -17,6 +17,8 @@ def add_initial_dynamics(unit_model):
         unit_model.initial_material_accumulation = Var(unit_model.config.property_package.phase_list, unit_model.config.property_package.component_list, initialize=0,units=units.mol/units.s)
         unit_model.initial_energy_accumulation = Var(unit_model.config.property_package.phase_list, initialize=0,units=units.kW)
 
+        unit_model.initial_material_holdup.setlb(0)
+
 
         @unit_model.Constraint(
             unit_model.config.property_package.phase_list,
