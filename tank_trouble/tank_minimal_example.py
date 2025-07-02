@@ -33,13 +33,14 @@ from idaes.models.properties.general_helmholtz import helmholtz_available
 from matplotlib import pyplot as plt
 import math
 import CoolProp.CoolProp as CoolProp  
+from property_packages.build_package import build_package
 
 
 m = pyo.ConcreteModel(name="Testing Tank model")
 m.fs = FlowsheetBlock(
-            dynamic=True, time_set=[0], time_units=pyo.units.s
+            dynamic=True, time_set=[0,1], time_units=pyo.units.s
         )
-m.fs.prop_water = iapws95.Iapws95ParameterBlock()
+m.fs.prop_water = build_package("helmholtz",["water"],["Liq","Vap"])
 
 
 m.fs.tank = WaterTank(
@@ -48,13 +49,17 @@ m.fs.tank = WaterTank(
 )
 
 m.discretizer = pyo.TransformationFactory("dae.finite_difference")
-m.discretizer.apply_to(m, nfe=3, wrt=m.fs.time, scheme="BACKWARD")
+m.discretizer.apply_to(m, nfe=1, wrt=m.fs.time, scheme="BACKWARD")
 
 
 
 m.fs.tank.inlet.flow_mol.fix(200)
 m.fs.tank.inlet.pressure.fix(100000)
-m.fs.tank.inlet.enth_mol.fix(3700.36)
+#m.fs.tank.inlet.enth_mol.fix(3700.36)
+m.fs.tank.control_volume.properties_in[0].constrain("temperature",300)
+m.fs.tank.control_volume.properties_in[1].constrain("temperature",300)
+
+
 
 m.fs.tank.tank_width.fix(0.4) #m
 m.fs.tank.tank_length.fix(0.4)
@@ -62,16 +67,31 @@ m.fs.tank.heat_duty.fix(0)  # W
 
 m.fs.tank.tank_level.fix(0.5)
 
-m.fs.tank.control_volume.material_accumulation[0,:,:].fix(0)
-m.fs.tank.control_volume.energy_accumulation[0,:].fix(0)
+#m.fs.tank.control_volume.material_accumulation[0,:,:].fix(0)
+#m.fs.tank.control_volume.energy_accumulation[0,:].fix(0)
 
+@m.fs.tank.Constraint()
+def initial_material_accumulation_liq(b):
+    return b.control_volume.material_accumulation[0, "Liq", "water"] == 0
+
+@m.fs.tank.Constraint()
+def initial_material_accumulation_vap(b):
+    return b.control_volume.material_accumulation[0, "Vap", "water"] == 0
+
+@m.fs.tank.Constraint()
+def initial_energy_accumulation_liq(b):
+    return b.control_volume.energy_accumulation[0, "Liq"] == 0
+
+@m.fs.tank.Constraint()
+def initial_energy_accumulation_vap(b):
+    return b.control_volume.energy_accumulation[0, "Vap"] == 0
 
 iscale.calculate_scaling_factors(m)
 
 print('DoF:', degrees_of_freedom(m.fs))  
 assert degrees_of_freedom(m.fs) == 0, "Degrees of freedom is not zero, check model setup."
 
-m.fs.tank.initialize()
+#m.fs.tank.initialize()
 
 assert degrees_of_freedom(m.fs) == 0, "Degrees of freedom is not zero, check model setup."
 
